@@ -1,0 +1,681 @@
+---
+title: "DATA1001"
+subtitle: "Classification"
+author: "Peter Straka"
+date: "Week 10, 2018-10-01"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE, cache=TRUE)
+pred1 <- 0.5
+pred2 <- 0.83
+library(tidyverse)
+library(ISLR)
+```
+
+## Statistical Learning
+
+Supervised learning is a branch of statistical learning, where some variables are considered **"inputs"** $\mathbf x$ (or predictors, or regressors) and some other variable is considered an **"output"** (or response, or dependent variable) $y$. 
+
+The aim is to **learn** a function $f$ which maps $\mathbf x$ to a good approximation $f(\mathbf x)$ of $y$. 
+
+```{r, echo=FALSE, fig.height=4}
+lin_reg <- lm(formula = Sales~Age, data = Carseats)
+Carseats %>% ggplot(aes(x=Age, y=Sales)) + geom_point() + 
+  geom_abline(intercept = lin_reg$coefficients[1], slope = lin_reg$coefficients[2], col=2)
+```
+
+---
+
+## Example: Simple linear regression
+
+$$
+y = f(x) + u, \text{ where } f(x) = \beta_0 + \beta_1 x
+$$
+and where $u$ is the residual of the approximation. 
+
+
+```{r}
+library(ISLR); head(Carseats)
+```
+
+
+---
+
+# Classification 
+
+Above, the output $y$ was a **continuous** random variable.
+
+For classification problems, the output $y$ is a **categorical** random variable.
+
+Consider the `Default` dataset: 
+
+```{r}
+head(Default)
+```
+ 
+---
+
+## Linear regression, categorical output
+
+Let's try to predict the `default` variable.
+
+Why don't we just code `No` with 0 and `Yes` with 1, 
+and fit a linear regression?
+
+
+--
+
+```{r, echo=FALSE, fig.height=5, fig.width=10, cache=TRUE}
+Default$y <- as.numeric(Default$default == "Yes")
+lin_reg <- lm(formula = y ~ balance, data = Default)
+Default %>% ggplot(aes(x = balance, y = y)) + 
+  geom_point(shape = '+', alpha = 0.3, col = "darkblue") +
+  geom_abline(intercept = lin_reg$coefficients[1],
+              slope = lin_reg$coefficients[2],
+              col = 2)
+```
+
+---
+
+## Logistic regression, categorical output
+
+Logistic regression models the _probability_ that a binary response variable $Y$ with possible values $0$ and $1$ takes the value $Y=1$.
+
+--
+
+```{r, echo=FALSE, fig.width=10, fig.height=5, cache=TRUE}
+log_reg <- glm(formula = default~balance, family = "binomial", data = Default)
+Default$log_reg <- log_reg$fitted.values
+Default %>% ggplot(aes(x=balance)) + geom_point(aes(y=y), shape='+', alpha = 0.3) + geom_line(aes(y=log_reg), col=2)
+```
+
+---
+
+## The Exponential function
+
+$x \mapsto \exp(x) = e^x$ where $e \approx 2.71\ldots$ is the Euler number.
+
+```{r, echo=FALSE, fig.height=4, cache=TRUE}
+xx <- seq(from=-5, to=5, length.out = 50)
+data.frame(x = xx, y = exp(xx)) %>% ggplot(aes(x=x, y=y)) + geom_line() + 
+  ylab("exp(x)") + ggtitle("Exponential function")
+```
+
+Properties: 
+
+--
+$\exp(x) > 0$; $\frac{d}{dx} \exp(x) = \exp(x)$; grows faster than $x^k$ for any $k$; $\exp(x+y) = \exp(x) \exp(y)$
+
+
+---
+
+## The Natural Logarithm
+
+The natural logarithm is the inverse function of the exponential function: 
+$$
+\log(\exp(x)) = x = \exp(\log(x))
+$$
+
+```{r, echo=FALSE, fig.height=4}
+xx <- exp(seq(from=-5, to=5, length.out = 50))
+data.frame(x = xx, y = log(xx)) %>% ggplot(aes(x=x, y=y)) + geom_line() + 
+  ylab("log(x)") + ggtitle("Natural Logarithm")
+```
+
+Properties: 
+--
+
+Defined only for $x>0$; Negative if $0<x<1$; $\log(ab) = \log(a) + \log(b)$; 
+$\log(1/a) = -\log(a)$; grows slower than any $x^k$ where $k>0$
+
+
+---
+
+## The Logistic Model
+
+First: similar to linear regression, compute the _score_ $Z$ for a given predictor
+$\mathbf x$: 
+
+$$
+Z = \beta_0 + \beta_1 x_1 + \ldots + \beta_m x_m
+$$
+
+Second: Map the score to the probability $\mathbf P(Y=1)$ 
+via the **logistic function** (or "sigmoid" function):
+
+$$
+\mathbf P(Y=1) = \sigma(Z) = \frac{\exp(Z)}{1 + \exp(Z)}
+$$
+
+```{r, echo=FALSE, fig.width=10, fig.height=4}
+library(latex2exp)
+xx <- seq(from=-6, to=6, length.out = 100)
+yy <- exp(xx) / (1 + exp(xx))
+data.frame(Z = xx, sigma = yy) %>% ggplot(aes(x=Z, y=sigma)) + geom_line() + 
+  ylab(TeX("$\\sigma(Z)$")) + ggtitle("Sigmoid function")
+```
+
+
+---
+
+## Predicting with probabilities
+
+Suppose that for each of the next three days, you predict rain with `r pred1` probability, whereas BOM predicts rain with `r pred2`. 
+
+It turns out that two of the three days were rainy. 
+
+Whose was the better prediction? 
+
+--
+
+Recall how we judged the quality of predicting outcomes $y_n$ 
+with model outputs $f(x_n)$ for linear regression: 
+
+--
+
+Mean squared error: 
+$$
+{\rm MSE} = \sum_{n=1}^N (y_n - f(\mathbf x_n))^2
+$$
+
+--
+
+In machine learning, _model error_ is commonly called "loss", 
+and MSE is the most common loss function for continuous output variables. 
+
+> We need a loss function for categorical output variables.
+
+
+---
+
+## Logistic loss
+
+Let's write $p := \sigma(Z)$ for the probability computed by the logistic model.
+
+The logistic loss (also called "binary cross entropy" in deep learning) for a 
+single outcome is defined as follows: 
+
+* If $y=1$, then $L(y,p) = -\log p$
+* If not $y=1$, then $L(y,p) = -\log (1-p)$. 
+
+--
+
+A shorter way to write this is 
+$$
+L(y,p) = -y\log p - (1-y) \log(1-p)
+$$
+
+
+--
+
+Convince yourself why this is a reasonable loss function! 
+
+* What loss do you get if $Y=1$ and you predicted $Y=1$ with high probability?
+--
+
+* What loss do you get if $Y=0$ and you predicted $Y=1$ with low probability?
+--
+
+* What loss do you get if $Y=1$ and you predicted $Y=1$ with low probability?
+--
+
+* What loss do you get if $Y=0$ and you predicted $Y=1$ with high probability?
+
+---
+
+## Back to weather prediction accuracy
+
+We calculate the mean logistic loss for the two predictions: 
+
+```{r, echo=TRUE}
+outcome <- c(1,0,1)
+log_loss <- function(pred, outcome) 
+  -sum(log(pred) * outcome + log(1-pred) * (1-outcome)) / length(pred)
+sapply(list(rep(0.5, 3), rep(0.83, 3)), function(x) log_loss(x, outcome))
+```
+
+If measuring prediction accuracy via logistic loss, then for 2/3 rainy days, the three 50% predictions are better than the three 83% predictions. 
+
+---
+
+## What would have been the "best" prediction?
+
+We plot the loss against the prediction probabilities $(p, p, p)$, where 
+$p$ ranges from 0.4 to 1:
+
+--
+
+```{r, fig.width=10, fig.height=4}
+xx <- seq(from=0.4, to=0.99, length.out = 500)
+yy <- sapply(xx, function(x) log_loss(rep(x, 3), outcome))
+x_min <- xx[which.min(yy)]
+data.frame(pred=xx, loss=yy) %>% ggplot(aes(x=pred, y=loss)) +
+  geom_line() + geom_vline(xintercept = x_min)
+x_min
+```
+
+---
+
+## Fitting a logistic regression model 
+
+Going back to the credit card default dataset: We consider the logistic model 
+$$
+P({\rm default}=\text{Yes}) = \sigma(Z) = \sigma(\beta_0 + \beta_1 X_1)
+$$
+where $X_1$ is the `balance` variable.
+
+To "fit" a logistic regression model is the same as "estimating" the parameters $\beta_0$ and $\beta_1$: 
+
+--
+
+It means to find the values $\hat \beta_0$ and $\hat \beta_1$ that minimize the logistic loss 
+$$
+\sum_{n=1}^N L(y_n, \sigma(\beta_0 + \beta_1 X_1))
+$$
+
+--
+
+By the way: 
+The negative logistic loss is known as the log-likelihood (logarithm of the likelihood) in statistics. 
+Minimizing loss means maximizing likelihood.
+Maximum likelihood is the bread and butter of statisticians.
+
+---
+
+## Let's try minimizing loss by hand
+
+```{r, fig.height=4, fig.width=10}
+sigmoid <- function(z) {exp(z) / (1+exp(z))}
+score <- function(x, beta0, beta1) {beta0 + beta1 * x}
+logistic_model <- function(x, beta0, beta1) {sigmoid(score(x, beta0, beta1))}
+beta0 <- seq(from=-15, to=-5, length.out = 100)
+loss <- sapply(beta0, function(beta0) {
+  pred <- logistic_model(Default$balance, beta0, 0.005)
+  log_loss(pred, Default$default == "Yes")})
+data.frame(beta0=beta0, loss=loss) %>% ggplot(aes(x=beta0, y=loss)) + geom_line()
+```
+
+
+---
+
+```{r, fig.height=5, fig.width=10}
+beta1 <- seq(from=0.004, to=0.006, length.out = 100)
+loss <- sapply(beta1, function(beta1) {
+  pred <- logistic_model(Default$balance, -10, beta1)
+  log_loss(pred, Default$default == "Yes")
+  })
+data.frame(beta0=beta0, loss=loss) %>% ggplot(aes(x=beta0, y=loss)) + geom_line()
+```
+
+---
+
+## Optimizing loss
+
+In this course, we won't go into the details of how to find the parameters 
+that minimize loss. 
+
+But aside, we mention: 
+
+* There exists a unique minimum for each coefficient $\hat \beta_k$
+* A generalization of [Newton's Method](https://en.wikipedia.org/wiki/Newton%27s_method) for more than one variable is used to find this minimum. 
+* This is implemented in most statistical packages, e.g. `glm` in R. 
+
+
+---
+
+## The package `glm`
+
+```{r}
+log_reg <- glm(formula = default~balance, family = "binomial", 
+               data = Default)
+log_reg
+```
+
+(Aside: _Deviance_ is used in statistics for $2 \times$ loss. Divided by $2$ and 
+$N = 10000$, this is the same as our "computed" minimal loss.)
+
+---
+
+## Odds and log-odds
+
+* The probability of the event $Y=1$ is $\mathbf P(Y=1)$. 
+
+* The **odds** of $Y=1$ are 
+  $$\frac{\mathbf P(Y=1)}{\mathbf P(Y\neq 1)}$$
+
+* The **log-odds** of $Y=1$ are defined as the logarithm of the odds. 
+
+Example: 
+
+Say $P(Y=1) = 0.9$. Then $P(Y\neq 1) = 0.1$, and the odds of $Y=1$ are $0.9/0.1=9$. The log-odds of $Y=1$ are $\log 9 \approx `r round(log(9), 3)`$.
+
+Think of odds and log-odds just as different scales for probability: 
+Odds range from $0$ to $\infty$, and log-odds from $-\infty$ to $\infty$, depending on if $\mathbf P(Y=1)$ is close to $0$ or close to $1$. 
+
+---
+
+## The inverse sigmoid function
+
+The sigmoid function $\sigma(z) = \exp(z) / (1+\exp(z))$
+
+* maps the _score_ $z$ to the probability $\mathbf P(Y=1)$
+* is increasing so has an inverse function, called the **logit** function:
+  $${\rm logit}(\sigma(z)) = z = \sigma({\rm logit}(z))$$
+  
+```{r, echo=FALSE, fig.height=4}
+pp <- seq(from=0.003, to=0.997, length.out = 200)
+data.frame(p = pp, z = log(pp/(1-pp))) %>% ggplot(aes(x = p, y=z)) + geom_line()
+```
+
+---
+
+## The inverse sigmoid function
+
+Let's calculate the logit function:
+
+--
+
+$${\rm logit}(p) = \log \frac{p}{1-p}, \quad \text{where } 0 < p < 1$$
+
+To summarize: 
+
+* score $\stackrel{\sigma(\,)}{\longrightarrow}$ probability
+
+* probability $\stackrel{\rm logit}{\longrightarrow}$ log-odds
+
+> So the score and the log-odds are the same thing.
+
+---
+
+## Interpreting the coefficients 
+
+Let's use all the variables in the Default dataset: 
+
+```{r}
+log_reg <- glm(formula = default ~ student + balance + income, family = "binomial", data = Default)
+log_reg$coefficients
+```
+
+These are our coefficient estimates $\hat\beta_0$, $\hat\beta_1$, $\hat\beta_2$, $\hat\beta_3$, where $X_1$ is `studentYes`, $X_2$ is `balance` and $X_3$ is `income`.
+
+
+--
+* Think of the intercept as the "baseline" value for the log-odds. It applies when the remaining variables are all 0 (although this may be unrealistic). Here, the intercept is negative, which hints that most cases are non-default. 
+
+--
+* Being a student decreases the log-odds of default by 
+  `r abs(round(log_reg$coefficients[["studentYes"]], 2))`. 
+
+--
+* For every thousand dollars on the balance, the log-odds of default increase by   `r round(log_reg$coefficients[["balance"]] * 1000, 2)`
+
+--
+* For every million dollars of income, the log-odds of default increase by 
+  `r round(log_reg$coefficients[["income"]] * 1000, 2)` 
+  (We will revoke this statement later.)
+  
+  
+---
+
+## Significance
+
+The sample was random; and since the coefficients were calculated from the sample, they are also random! 
+
+If we'd sample and fit a model again, we would get different coefficients. 
+
+--
+
+The coefficient for `income` is really close to 0. Would it be possible that in (hypothetical) repeated samples it would be sometimes negative, sometimes positive? If so, what would this mean?
+
+--
+
+> If a coefficient fluctuates around 0, we would think that its variable has any real influence in the model. We say it is not **significant**.
+
+---
+
+## Significance
+
+The key selling point of a statistics degree over machine learning is the focus on _quantifying uncertainty_. In a "proper" statistics class, you will learn how to estimate the distribution of the coefficients $\hat \beta_k$. 
+(It is bell-shaped, but not quite the normal distribution: the t-distribution.)
+
+--
+
+> If $\hat \beta_k = 0$ is a very unlikely value in this distribution, then we will say that the variable $X_k$ is **significant**. 
+
+--
+
+> How likely the value 0 is in the distribution of $\beta_k$, is measured by the **p-value**. 
+
+Below is the output of 
+
+```{r, eval=FALSE}
+summary(log_reg)
+```
+
+
+---
+
+```{r, echo = 4:8}
+summary(log_reg)
+```
+
+---
+
+## Choosing a model 
+
+The last column contains the p-value for each coefficient. 
+
+Indeed, the `income` variable is not significant, so we omit it from the model. 
+
+As a model for the probability of default, we choose 
+
+$$\log \frac{\mathbf P(Y=1)}{\mathbf P(Y \neq 1)} 
+= -10.9 -0.65 \times {\tt student} + 0.0057 \times {\tt balance}$$
+
+
+
+---
+
+# Classifying future data
+
+Often, the main point of having a model is to make predictions about the future: 
+
+* What will be the probability that a certain customer signing up for a credit card will default on their loan? 
+
+    - Use the model output to decide whether or not to approve the loan. 
+
+* What will be the probability that the visitor of a web page with certain characteristics clicks a certain link? 
+
+    - Use this to decide what customers to target with advertisements with emails. 
+In machine learning, the quality of a model is measured by the loss of the model when predicting outcomes based on new data. 
+
+
+---
+
+## Train and test data
+
+The performance on new data can be measured by using "test data", or "holdout data": 
+
+* Randomly sample a fraction of training data, e.g. 80% of all data. 
+  Use these to fit a model.
+
+* The remaining fraction of 20% is used as test data, to evaluate the predictive
+  performance of the model. 
+
+
+```{r}
+N <- dim(Default)[1]
+train_part <- 0.8
+set.seed(123)
+train_idx <-
+  sample(x = 1:N,
+  size = round(train_part * N),
+  replace = FALSE)
+log_reg <-
+  glm(formula = default ~ student + balance,
+  family = "binomial",
+  data = Default[train_idx, ])
+```
+
+
+---
+
+## Train and test data
+
+Predictions on the test data, and their prediction loss are calculated easily in R:
+
+```{r}
+preds_test <- predict(object = log_reg,
+                 newdata = Default[-train_idx, ],
+                 type = "response")
+actuals_test <- (Default$default == "Yes")[-train_idx]
+log_loss(preds_test, actuals_test)
+```
+
+Note that the loss for predicting new data is typically higher than the loss on the training set: 
+
+```{r}
+preds_train <- predict(object = log_reg,
+                 newdata = Default[train_idx, ],
+                 type = "response")
+actuals_train <- (Default$default == "Yes")[train_idx]
+log_loss(preds_train, actuals_train)
+```
+
+
+---
+
+## Threshold 
+
+The vector `preds_test` contains the probabilities for each test case to lead to default.
+
+> Suppose that these cases were applications for new loans. How would you use the predicted probabilities of default to approve their loans? 
+
+--
+
+Let's pick a threshold, and record whether or not the probability is above or below the threshold: 
+
+```{r}
+threshold <- 0.5
+high_risk <- preds_test > threshold
+high_risk[1:20]
+```
+
+---
+
+## Confusion matrix
+
+Let's tabulate the cases we deem high risk, and the actual defaults:
+
+```{r}
+table(actuals_test, high_risk)
+```
+
+
+Interpret each of the four fields. What is the cost for the bank in each case? 
+
+
+---
+
+## False positives & false negatives 
+
+The prediction of our model contains positives (`high_risk`) and negatives (non `high-risk`). 
+
+--
+
+The misclassified cases are called: 
+
+* "false positives" (FP) if the test result was positive (`high_risk`) but `default` variable was "No"
+* "false negatives" (FN) if the test result was negative (not `high_risk`) but `default` variable was "Yes"
+
+--
+
+**Sensitivity** is defined as TP / (TP + FN); also called the "true positive rate"
+
+**Specificity** is defined as TN / (TN + FP); also called the "true negative rate"
+
+--
+
+> What happens to Sensitivity as you vary the threshold? 
+
+--
+
+> What happens to Specificity as you vary the threshold?
+
+
+---
+
+## ROC Curve
+
+As you vary the threshold from low values near 0, to high values near 1, the pair ("Sensitivity", "Specificity") traces a curve in the plane:
+
+```{r, include=FALSE}
+library(pROC)
+```
+
+```{r, fig.height=4, fig.width=4}
+roc_test <- roc(actuals_test, preds_test)
+plot(roc_test)
+```
+
+---
+
+The higher the area under curve (AUC), the better. For our test data, we have an AUC of 
+
+```{r}
+roc_test$auc
+```
+
+What AUC would we get with completely random guesses? 
+
+---
+
+```{r, fig.height=4, fig.width=4}
+shuffled <- sample(x = preds_test)
+shuffled_roc <- roc(actuals_test, shuffled)
+plot(shuffled_roc)
+shuffled_roc$auc
+```
+
+
+---
+
+## How to read AUC values
+
+* AUC $\approx 0.5$: useless model
+
+* AUC $\approx 0.7$: fair classification performance
+
+* AUC $\approx 0.9$: good classification performance
+
+
+---
+
+## Recap
+
+* You have learnt about classification problems, which are the basis for many 
+  interesting data science problems 
+* You know the basics of logistic regression, the standard tool for classification. 
+  (As you become a data scientist, you'll get to know many more tools, e.g. 
+
+---
+
+# References
+
+Chapter 4 in: James, Gareth, et al. An introduction to statistical learning. Vol. 112. New York: springer, 2013.
+
+Probability of Default Estimation: https://en.wikipedia.org/wiki/Probability_of_default#PD_Estimation 
+
+Sensitivity and Specificity: 
+https://en.wikipedia.org/wiki/Sensitivity_and_specificity
+
+Statistical significance: 
+Section 3.1.2 in: James, Gareth, et al. An introduction to statistical learning. Vol. 112. New York: springer, 2013. 

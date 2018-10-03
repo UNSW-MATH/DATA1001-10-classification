@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>DATA1001</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Peter Straka" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# DATA1001
+## Classification
+### Peter Straka
+### Week 10, 2018-10-01
+
+---
+
+
+
+
+## Statistical Learning
+
+Supervised learning is a branch of statistical learning, where some variables are considered **"inputs"** `\(\mathbf x\)` (or predictors, or regressors) and some other variable is considered an **"output"** (or response, or dependent variable) `\(y\)`. 
+
+The aim is to **learn** a function `\(f\)` which maps `\(\mathbf x\)` to a good approximation `\(f(\mathbf x)\)` of `\(y\)`. 
+
+![](index_files/figure-html/unnamed-chunk-1-1.png)&lt;!-- --&gt;
+
+---
+
+## Example: Simple linear regression
+
+$$
+y = f(x) + u, \text{ where } f(x) = \beta_0 + \beta_1 x
+$$
+and where `\(u\)` is the residual of the approximation. 
+
+
+
+```r
+library(ISLR); head(Carseats)
+```
+
+```
+##   Sales CompPrice Income Advertising Population Price ShelveLoc Age
+## 1  9.50       138     73          11        276   120       Bad  42
+## 2 11.22       111     48          16        260    83      Good  65
+## 3 10.06       113     35          10        269    80    Medium  59
+## 4  7.40       117    100           4        466    97    Medium  55
+## 5  4.15       141     64           3        340   128       Bad  38
+## 6 10.81       124    113          13        501    72       Bad  78
+##   Education Urban  US
+## 1        17   Yes Yes
+## 2        10   Yes Yes
+## 3        12   Yes Yes
+## 4        14   Yes Yes
+## 5        13   Yes  No
+## 6        16    No Yes
+```
+
+
+---
+
+# Classification 
+
+Above, the output `\(y\)` was a **continuous** random variable.
+
+For classification problems, the output `\(y\)` is a **categorical** random variable.
+
+Consider the `Default` dataset: 
+
+
+```r
+head(Default)
+```
+
+```
+##   default student   balance    income
+## 1      No      No  729.5265 44361.625
+## 2      No     Yes  817.1804 12106.135
+## 3      No      No 1073.5492 31767.139
+## 4      No      No  529.2506 35704.494
+## 5      No      No  785.6559 38463.496
+## 6      No     Yes  919.5885  7491.559
+```
+ 
+---
+
+## Linear regression, categorical output
+
+Let's try to predict the `default` variable.
+
+Why don't we just code `No` with 0 and `Yes` with 1, 
+and fit a linear regression?
+
+
+--
+
+![](index_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+
+---
+
+## Logistic regression, categorical output
+
+Logistic regression models the _probability_ that a binary response variable `\(Y\)` with possible values `\(0\)` and `\(1\)` takes the value `\(Y=1\)`.
+
+--
+
+![](index_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
+---
+
+## The Exponential function
+
+`\(x \mapsto \exp(x) = e^x\)` where `\(e \approx 2.71\ldots\)` is the Euler number.
+
+![](index_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+Properties: 
+
+--
+`\(\exp(x) &gt; 0\)`; `\(\frac{d}{dx} \exp(x) = \exp(x)\)`; grows faster than `\(x^k\)` for any `\(k\)`; `\(\exp(x+y) = \exp(x) \exp(y)\)`
+
+
+---
+
+## The Natural Logarithm
+
+The natural logarithm is the inverse function of the exponential function: 
+$$
+\log(\exp(x)) = x = \exp(\log(x))
+$$
+
+![](index_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+Properties: 
+--
+
+Defined only for `\(x&gt;0\)`; Negative if `\(0&lt;x&lt;1\)`; `\(\log(ab) = \log(a) + \log(b)\)`; 
+`\(\log(1/a) = -\log(a)\)`; grows slower than any `\(x^k\)` where `\(k&gt;0\)`
+
+
+---
+
+## The Logistic Model
+
+First: similar to linear regression, compute the _score_ `\(Z\)` for a given predictor
+`\(\mathbf x\)`: 
+
+$$
+Z = \beta_0 + \beta_1 x_1 + \ldots + \beta_m x_m
+$$
+
+Second: Map the score to the probability `\(\mathbf P(Y=1)\)` 
+via the **logistic function** (or "sigmoid" function):
+
+$$
+\mathbf P(Y=1) = \sigma(Z) = \frac{\exp(Z)}{1 + \exp(Z)}
+$$
+
+![](index_files/figure-html/unnamed-chunk-8-1.png)&lt;!-- --&gt;
+
+
+---
+
+## Predicting with probabilities
+
+Suppose that for each of the next three days, you predict rain with 0.5 probability, whereas BOM predicts rain with 0.83. 
+
+It turns out that two of the three days were rainy. 
+
+Whose was the better prediction? 
+
+--
+
+Recall how we judged the quality of predicting outcomes `\(y_n\)` 
+with model outputs `\(f(x_n)\)` for linear regression: 
+
+--
+
+Mean squared error: 
+$$
+{\rm MSE} = \sum_{n=1}^N (y_n - f(\mathbf x_n))^2
+$$
+
+--
+
+In machine learning, _model error_ is commonly called "loss", 
+and MSE is the most common loss function for continuous output variables. 
+
+&gt; We need a loss function for categorical output variables.
+
+
+---
+
+## Logistic loss
+
+Let's write `\(p := \sigma(Z)\)` for the probability computed by the logistic model.
+
+The logistic loss (also called "binary cross entropy" in deep learning) for a 
+single outcome is defined as follows: 
+
+* If `\(y=1\)`, then `\(L(y,p) = -\log p\)`
+* If not `\(y=1\)`, then `\(L(y,p) = -\log (1-p)\)`. 
+
+--
+
+A shorter way to write this is 
+$$
+L(y,p) = -y\log p - (1-y) \log(1-p)
+$$
+
+
+--
+
+Convince yourself why this is a reasonable loss function! 
+
+* What loss do you get if `\(Y=1\)` and you predicted `\(Y=1\)` with high probability?
+--
+
+* What loss do you get if `\(Y=0\)` and you predicted `\(Y=1\)` with low probability?
+--
+
+* What loss do you get if `\(Y=1\)` and you predicted `\(Y=1\)` with low probability?
+--
+
+* What loss do you get if `\(Y=0\)` and you predicted `\(Y=1\)` with high probability?
+
+---
+
+## Back to weather prediction accuracy
+
+We calculate the mean logistic loss for the two predictions: 
+
+
+```r
+outcome &lt;- c(1,0,1)
+log_loss &lt;- function(pred, outcome) 
+  -sum(log(pred) * outcome + log(1-pred) * (1-outcome)) / length(pred)
+sapply(list(rep(0.5, 3), rep(0.83, 3)), function(x) log_loss(x, outcome))
+```
+
+```
+## [1] 0.6931472 0.7148720
+```
+
+If measuring prediction accuracy via logistic loss, then for 2/3 rainy days, the three 50% predictions are better than the three 83% predictions. 
+
+---
+
+## What would have been the "best" prediction?
+
+We plot the loss against the prediction probabilities `\((p, p, p)\)`, where 
+`\(p\)` ranges from 0.4 to 1:
+
+--
+
+
+```r
+xx &lt;- seq(from=0.4, to=0.99, length.out = 500)
+yy &lt;- sapply(xx, function(x) log_loss(rep(x, 3), outcome))
+x_min &lt;- xx[which.min(yy)]
+data.frame(pred=xx, loss=yy) %&gt;% ggplot(aes(x=pred, y=loss)) +
+  geom_line() + geom_vline(xintercept = x_min)
+```
+
+![](index_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;
+
+```r
+x_min
+```
+
+```
+## [1] 0.6672144
+```
+
+---
+
+## Fitting a logistic regression model 
+
+Going back to the credit card default dataset: We consider the logistic model 
+$$
+P({\rm default}=\text{Yes}) = \sigma(Z) = \sigma(\beta_0 + \beta_1 X_1)
+$$
+where `\(X_1\)` is the `balance` variable.
+
+To "fit" a logistic regression model is the same as "estimating" the parameters `\(\beta_0\)` and `\(\beta_1\)`: 
+
+--
+
+It means to find the values `\(\hat \beta_0\)` and `\(\hat \beta_1\)` that minimize the logistic loss 
+$$
+\sum_{n=1}^N L(y_n, \sigma(\beta_0 + \beta_1 X_1))
+$$
+
+--
+
+By the way: 
+The negative logistic loss is known as the log-likelihood (logarithm of the likelihood) in statistics. 
+Minimizing loss means maximizing likelihood.
+Maximum likelihood is the bread and butter of statisticians.
+
+---
+
+## Let's try minimizing loss by hand
+
+
+```r
+sigmoid &lt;- function(z) {exp(z) / (1+exp(z))}
+score &lt;- function(x, beta0, beta1) {beta0 + beta1 * x}
+logistic_model &lt;- function(x, beta0, beta1) {sigmoid(score(x, beta0, beta1))}
+beta0 &lt;- seq(from=-15, to=-5, length.out = 100)
+loss &lt;- sapply(beta0, function(beta0) {
+  pred &lt;- logistic_model(Default$balance, beta0, 0.005)
+  log_loss(pred, Default$default == "Yes")})
+data.frame(beta0=beta0, loss=loss) %&gt;% ggplot(aes(x=beta0, y=loss)) + geom_line()
+```
+
+![](index_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+
+
+---
+
+
+```r
+beta1 &lt;- seq(from=0.004, to=0.006, length.out = 100)
+loss &lt;- sapply(beta1, function(beta1) {
+  pred &lt;- logistic_model(Default$balance, -10, beta1)
+  log_loss(pred, Default$default == "Yes")
+  })
+data.frame(beta0=beta0, loss=loss) %&gt;% ggplot(aes(x=beta0, y=loss)) + geom_line()
+```
+
+![](index_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
+
+---
+
+## Optimizing loss
+
+In this course, we won't go into the details of how to find the parameters 
+that minimize loss. 
+
+But aside, we mention: 
+
+* There exists a unique minimum for each coefficient `\(\hat \beta_k\)`
+* A generalization of [Newton's Method](https://en.wikipedia.org/wiki/Newton%27s_method) for more than one variable is used to find this minimum. 
+* This is implemented in most statistical packages, e.g. `glm` in R. 
+
+
+---
+
+## The package `glm`
+
+
+```r
+log_reg &lt;- glm(formula = default~balance, family = "binomial", 
+               data = Default)
+log_reg
+```
+
+```
+## 
+## Call:  glm(formula = default ~ balance, family = "binomial", data = Default)
+## 
+## Coefficients:
+## (Intercept)      balance  
+##  -10.651331     0.005499  
+## 
+## Degrees of Freedom: 9999 Total (i.e. Null);  9998 Residual
+## Null Deviance:	    2921 
+## Residual Deviance: 1596 	AIC: 1600
+```
+
+(Aside: _Deviance_ is used in statistics for `\(2 \times\)` loss. Divided by `\(2\)` and 
+`\(N = 10000\)`, this is the same as our "computed" minimal loss.)
+
+---
+
+## Odds and log-odds
+
+* The probability of the event `\(Y=1\)` is `\(\mathbf P(Y=1)\)`. 
+
+* The **odds** of `\(Y=1\)` are 
+  `$$\frac{\mathbf P(Y=1)}{\mathbf P(Y\neq 1)}$$`
+
+* The **log-odds** of `\(Y=1\)` are defined as the logarithm of the odds. 
+
+Example: 
+
+Say `\(P(Y=1) = 0.9\)`. Then `\(P(Y\neq 1) = 0.1\)`, and the odds of `\(Y=1\)` are `\(0.9/0.1=9\)`. The log-odds of `\(Y=1\)` are `\(\log 9 \approx 2.197\)`.
+
+Think of odds and log-odds just as different scales for probability: 
+Odds range from `\(0\)` to `\(\infty\)`, and log-odds from `\(-\infty\)` to `\(\infty\)`, depending on if `\(\mathbf P(Y=1)\)` is close to `\(0\)` or close to `\(1\)`. 
+
+---
+
+## The inverse sigmoid function
+
+The sigmoid function `\(\sigma(z) = \exp(z) / (1+\exp(z))\)`
+
+* maps the _score_ `\(z\)` to the probability `\(\mathbf P(Y=1)\)`
+* is increasing so has an inverse function, called the **logit** function:
+  `$${\rm logit}(\sigma(z)) = z = \sigma({\rm logit}(z))$$`
+  
+![](index_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+
+---
+
+## The inverse sigmoid function
+
+Let's calculate the logit function:
+
+--
+
+`$${\rm logit}(p) = \log \frac{p}{1-p}, \quad \text{where } 0 &lt; p &lt; 1$$`
+
+To summarize: 
+
+* score `\(\stackrel{\sigma(\,)}{\longrightarrow}\)` probability
+
+* probability `\(\stackrel{\rm logit}{\longrightarrow}\)` log-odds
+
+&gt; So the score and the log-odds are the same thing.
+
+---
+
+## Interpreting the coefficients 
+
+Let's use all the variables in the Default dataset: 
+
+
+```r
+log_reg &lt;- glm(formula = default ~ student + balance + income, family = "binomial", data = Default)
+log_reg$coefficients
+```
+
+```
+##   (Intercept)    studentYes       balance        income 
+## -1.086905e+01 -6.467758e-01  5.736505e-03  3.033450e-06
+```
+
+These are our coefficient estimates `\(\hat\beta_0\)`, `\(\hat\beta_1\)`, `\(\hat\beta_2\)`, `\(\hat\beta_3\)`, where `\(X_1\)` is `studentYes`, `\(X_2\)` is `balance` and `\(X_3\)` is `income`.
+
+
+--
+* Think of the intercept as the "baseline" value for the log-odds. It applies when the remaining variables are all 0 (although this may be unrealistic). Here, the intercept is negative, which hints that most cases are non-default. 
+
+--
+* Being a student decreases the log-odds of default by 
+  0.65. 
+
+--
+* For every thousand dollars on the balance, the log-odds of default increase by   5.74
+
+--
+* For every million dollars of income, the log-odds of default increase by 
+  0 
+  (We will revoke this statement later.)
+  
+  
+---
+
+## Significance
+
+The sample was random; and since the coefficients were calculated from the sample, they are also random! 
+
+If we'd sample and fit a model again, we would get different coefficients. 
+
+--
+
+The coefficient for `income` is really close to 0. Would it be possible that in (hypothetical) repeated samples it would be sometimes negative, sometimes positive? If so, what would this mean?
+
+--
+
+&gt; If a coefficient fluctuates around 0, we would think that its variable has any real influence in the model. We say it is not **significant**.
+
+---
+
+## Significance
+
+The key selling point of a statistics degree over machine learning is the focus on _quantifying uncertainty_. In a "proper" statistics class, you will learn how to estimate the distribution of the coefficients `\(\hat \beta_k\)`. 
+(It is bell-shaped, but not quite the normal distribution: the t-distribution.)
+
+--
+
+&gt; If `\(\hat \beta_k = 0\)` is a very unlikely value in this distribution, then we will say that the variable `\(X_k\)` is **significant**. 
+
+--
+
+&gt; How likely the value 0 is in the distribution of `\(\beta_k\)`, is measured by the **p-value**. 
+
+Below is the output of 
+
+
+```r
+summary(log_reg)
+```
+
+
+---
+
+
+```
+## 
+## Call:
+## glm(formula = default ~ student + balance + income, family = "binomial", 
+##     data = Default)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.4691  -0.1418  -0.0557  -0.0203   3.7383  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -1.087e+01  4.923e-01 -22.080  &lt; 2e-16 ***
+## studentYes  -6.468e-01  2.363e-01  -2.738  0.00619 ** 
+## balance      5.737e-03  2.319e-04  24.738  &lt; 2e-16 ***
+## income       3.033e-06  8.203e-06   0.370  0.71152    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 2920.6  on 9999  degrees of freedom
+## Residual deviance: 1571.5  on 9996  degrees of freedom
+## AIC: 1579.5
+## 
+## Number of Fisher Scoring iterations: 8
+```
+
+---
+
+## Choosing a model 
+
+The last column contains the p-value for each coefficient. 
+
+Indeed, the `income` variable is not significant, so we omit it from the model. 
+
+As a model for the probability of default, we choose 
+
+`$$\log \frac{\mathbf P(Y=1)}{\mathbf P(Y \neq 1)} 
+= -10.9 -0.65 \times {\tt student} + 0.0057 \times {\tt balance}$$`
+
+
+
+---
+
+# Classifying future data
+
+Often, the main point of having a model is to make predictions about the future: 
+
+* What will be the probability that a certain customer signing up for a credit card will default on their loan? 
+
+    - Use the model output to decide whether or not to approve the loan. 
+
+* What will be the probability that the visitor of a web page with certain characteristics clicks a certain link? 
+
+    - Use this to decide what customers to target with advertisements with emails. 
+In machine learning, the quality of a model is measured by the loss of the model when predicting outcomes based on new data. 
+
+
+---
+
+## Train and test data
+
+The performance on new data can be measured by using "test data", or "holdout data": 
+
+* Randomly sample a fraction of training data, e.g. 80% of all data. 
+  Use these to fit a model.
+
+* The remaining fraction of 20% is used as test data, to evaluate the predictive
+  performance of the model. 
+
+
+
+```r
+N &lt;- dim(Default)[1]
+train_part &lt;- 0.8
+set.seed(123)
+train_idx &lt;-
+  sample(x = 1:N,
+  size = round(train_part * N),
+  replace = FALSE)
+log_reg &lt;-
+  glm(formula = default ~ student + balance,
+  family = "binomial",
+  data = Default[train_idx, ])
+```
+
+
+---
+
+## Train and test data
+
+Predictions on the test data, and their prediction loss are calculated easily in R:
+
+
+```r
+preds_test &lt;- predict(object = log_reg,
+                 newdata = Default[-train_idx, ],
+                 type = "response")
+actuals_test &lt;- (Default$default == "Yes")[-train_idx]
+log_loss(preds_test, actuals_test)
+```
+
+```
+## [1] 0.0831293
+```
+
+Note that the loss for predicting new data is typically higher than the loss on the training set: 
+
+
+```r
+preds_train &lt;- predict(object = log_reg,
+                 newdata = Default[train_idx, ],
+                 type = "response")
+actuals_train &lt;- (Default$default == "Yes")[train_idx]
+log_loss(preds_train, actuals_train)
+```
+
+```
+## [1] 0.0775589
+```
+
+
+---
+
+## Threshold 
+
+The vector `preds_test` contains the probabilities for each test case to lead to default.
+
+&gt; Suppose that these cases were applications for new loans. How would you use the predicted probabilities of default to approve their loans? 
+
+--
+
+Let's pick a threshold, and record whether or not the probability is above or below the threshold: 
+
+
+```r
+threshold &lt;- 0.5
+high_risk &lt;- preds_test &gt; threshold
+high_risk[1:20]
+```
+
+```
+##     2     4     9    14    15    16    20    23    34    37    40    48 
+## FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE 
+##    53    63    65    74    87    94   102   105 
+## FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+```
+
+---
+
+## Confusion matrix
+
+Let's tabulate the cases we deem high risk, and the actual defaults:
+
+
+```r
+table(actuals_test, high_risk)
+```
+
+```
+##             high_risk
+## actuals_test FALSE TRUE
+##        FALSE  1928   14
+##        TRUE     43   15
+```
+
+
+Interpret each of the four fields. What is the cost for the bank in each case? 
+
+
+---
+
+## False positives &amp; false negatives 
+
+The prediction of our model contains positives (`high_risk`) and negatives (non `high-risk`). 
+
+--
+
+The misclassified cases are called: 
+
+* "false positives" (FP) if the test result was positive (`high_risk`) but `default` variable was "No"
+* "false negatives" (FN) if the test result was negative (not `high_risk`) but `default` variable was "Yes"
+
+--
+
+**Sensitivity** is defined as TP / (TP + FN); also called the "true positive rate"
+
+**Specificity** is defined as TN / (TN + FP); also called the "true negative rate"
+
+--
+
+&gt; What happens to Sensitivity as you vary the threshold? 
+
+--
+
+&gt; What happens to Specificity as you vary the threshold?
+
+
+---
+
+## ROC Curve
+
+As you vary the threshold from low values near 0, to high values near 1, the pair ("Sensitivity", "Specificity") traces a curve in the plane:
+
+
+
+
+```r
+roc_test &lt;- roc(actuals_test, preds_test)
+plot(roc_test)
+```
+
+![](index_files/figure-html/unnamed-chunk-24-1.png)&lt;!-- --&gt;
+
+---
+
+The higher the area under curve (AUC), the better. For our test data, we have an AUC of 
+
+
+```r
+roc_test$auc
+```
+
+```
+## Area under the curve: 0.9314
+```
+
+What AUC would we get with completely random guesses? 
+
+---
+
+
+```r
+shuffled &lt;- sample(x = preds_test)
+shuffled_roc &lt;- roc(actuals_test, shuffled)
+plot(shuffled_roc)
+```
+
+![](index_files/figure-html/unnamed-chunk-26-1.png)&lt;!-- --&gt;
+
+```r
+shuffled_roc$auc
+```
+
+```
+## Area under the curve: 0.5528
+```
+
+
+---
+
+## How to read AUC values
+
+* AUC `\(\approx 0.5\)`: useless model
+
+* AUC `\(\approx 0.7\)`: fair classification performance
+
+* AUC `\(\approx 0.9\)`: good classification performance
+
+
+---
+
+## Recap
+
+* You have learnt about classification problems, which are the basis for many 
+  interesting data science problems 
+* You know the basics of logistic regression, the standard tool for classification. 
+  (As you become a data scientist, you'll get to know many more tools, e.g. 
+
+---
+
+# References
+
+Chapter 4 in: James, Gareth, et al. An introduction to statistical learning. Vol. 112. New York: springer, 2013.
+
+Probability of Default Estimation: https://en.wikipedia.org/wiki/Probability_of_default#PD_Estimation 
+
+Sensitivity and Specificity: 
+https://en.wikipedia.org/wiki/Sensitivity_and_specificity
+
+Statistical significance: 
+Section 3.1.2 in: James, Gareth, et al. An introduction to statistical learning. Vol. 112. New York: springer, 2013.
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
