@@ -45,20 +45,20 @@ library(ISLR); head(Carseats)
 ```
 
 ```
-##   Sales CompPrice Income Advertising Population Price ShelveLoc Age
-## 1  9.50       138     73          11        276   120       Bad  42
-## 2 11.22       111     48          16        260    83      Good  65
-## 3 10.06       113     35          10        269    80    Medium  59
-## 4  7.40       117    100           4        466    97    Medium  55
-## 5  4.15       141     64           3        340   128       Bad  38
-## 6 10.81       124    113          13        501    72       Bad  78
-##   Education Urban  US
-## 1        17   Yes Yes
-## 2        10   Yes Yes
-## 3        12   Yes Yes
-## 4        14   Yes Yes
-## 5        13   Yes  No
-## 6        16    No Yes
+  Sales CompPrice Income Advertising Population Price ShelveLoc Age
+1  9.50       138     73          11        276   120       Bad  42
+2 11.22       111     48          16        260    83      Good  65
+3 10.06       113     35          10        269    80    Medium  59
+4  7.40       117    100           4        466    97    Medium  55
+5  4.15       141     64           3        340   128       Bad  38
+6 10.81       124    113          13        501    72       Bad  78
+  Education Urban  US
+1        17   Yes Yes
+2        10   Yes Yes
+3        12   Yes Yes
+4        14   Yes Yes
+5        13   Yes  No
+6        16    No Yes
 ```
 
 
@@ -78,13 +78,13 @@ head(Default)
 ```
 
 ```
-##   default student   balance    income
-## 1      No      No  729.5265 44361.625
-## 2      No     Yes  817.1804 12106.135
-## 3      No      No 1073.5492 31767.139
-## 4      No      No  529.2506 35704.494
-## 5      No      No  785.6559 38463.496
-## 6      No     Yes  919.5885  7491.559
+  default student   balance    income
+1      No      No  729.5265 44361.625
+2      No     Yes  817.1804 12106.135
+3      No      No 1073.5492 31767.139
+4      No      No  529.2506 35704.494
+5      No      No  785.6559 38463.496
+6      No     Yes  919.5885  7491.559
 ```
  
 ---
@@ -244,7 +244,7 @@ sapply(list(rep(0.5, 3), rep(0.83, 3)), function(x) log_loss(x, outcome))
 ```
 
 ```
-## [1] 0.6931472 0.7148720
+[1] 0.6931472 0.7148720
 ```
 
 If measuring prediction accuracy via logistic loss, then for 2/3 rainy days, the three 50% predictions are better than the three 83% predictions. 
@@ -274,7 +274,7 @@ x_min
 ```
 
 ```
-## [1] 0.6672144
+[1] 0.6672144
 ```
 
 ---
@@ -362,16 +362,16 @@ log_reg
 ```
 
 ```
-## 
-## Call:  glm(formula = default ~ balance, family = "binomial", data = Default)
-## 
-## Coefficients:
-## (Intercept)      balance  
-##  -10.651331     0.005499  
-## 
-## Degrees of Freedom: 9999 Total (i.e. Null);  9998 Residual
-## Null Deviance:	    2921 
-## Residual Deviance: 1596 	AIC: 1600
+
+Call:  glm(formula = default ~ balance, family = "binomial", data = Default)
+
+Coefficients:
+(Intercept)      balance  
+ -10.651331     0.005499  
+
+Degrees of Freedom: 9999 Total (i.e. Null);  9998 Residual
+Null Deviance:	    2921 
+Residual Deviance: 1596 	AIC: 1600
 ```
 
 (Aside: _Deviance_ is used in statistics for `\(2 \times\)` loss. Divided by `\(2\)` and 
@@ -438,8 +438,8 @@ log_reg$coefficients
 ```
 
 ```
-##   (Intercept)    studentYes       balance        income 
-## -1.086905e+01 -6.467758e-01  5.736505e-03  3.033450e-06
+  (Intercept)    studentYes       balance        income 
+-1.086905e+01 -6.467758e-01  5.736505e-03  3.033450e-06 
 ```
 
 These are our coefficient estimates `\(\hat\beta_0\)`, `\(\hat\beta_1\)`, `\(\hat\beta_2\)`, `\(\hat\beta_3\)`, where `\(X_1\)` is `studentYes`, `\(X_2\)` is `balance` and `\(X_3\)` is `income`.
@@ -504,31 +504,31 @@ summary(log_reg)
 
 
 ```
-## 
-## Call:
-## glm(formula = default ~ student + balance + income, family = "binomial", 
-##     data = Default)
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -2.4691  -0.1418  -0.0557  -0.0203   3.7383  
-## 
-## Coefficients:
-##               Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept) -1.087e+01  4.923e-01 -22.080  &lt; 2e-16 ***
-## studentYes  -6.468e-01  2.363e-01  -2.738  0.00619 ** 
-## balance      5.737e-03  2.319e-04  24.738  &lt; 2e-16 ***
-## income       3.033e-06  8.203e-06   0.370  0.71152    
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## (Dispersion parameter for binomial family taken to be 1)
-## 
-##     Null deviance: 2920.6  on 9999  degrees of freedom
-## Residual deviance: 1571.5  on 9996  degrees of freedom
-## AIC: 1579.5
-## 
-## Number of Fisher Scoring iterations: 8
+
+Call:
+glm(formula = default ~ student + balance + income, family = "binomial", 
+    data = Default)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-2.4691  -0.1418  -0.0557  -0.0203   3.7383  
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -1.087e+01  4.923e-01 -22.080  &lt; 2e-16 ***
+studentYes  -6.468e-01  2.363e-01  -2.738  0.00619 ** 
+balance      5.737e-03  2.319e-04  24.738  &lt; 2e-16 ***
+income       3.033e-06  8.203e-06   0.370  0.71152    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 2920.6  on 9999  degrees of freedom
+Residual deviance: 1571.5  on 9996  degrees of freedom
+AIC: 1579.5
+
+Number of Fisher Scoring iterations: 8
 ```
 
 ---
@@ -607,7 +607,7 @@ log_loss(preds_test, actuals_test)
 ```
 
 ```
-## [1] 0.0831293
+[1] 0.0831293
 ```
 
 Note that the loss for predicting new data is typically higher than the loss on the training set: 
@@ -622,9 +622,27 @@ log_loss(preds_train, actuals_train)
 ```
 
 ```
-## [1] 0.0775589
+[1] 0.0775589
 ```
 
+---
+class: middle
+
+# Overfitting
+
+The more parameters a model has, the more complex it is. For example, for each variable that enters a linear model, you have one additional parameter.
+
+--
+
+If a model becomes too complex, it "memorizes" the training output, and does a bad job "generalizing" to new data; this is called **overfitting**.
+
+--
+
+If loss is *much* higher on the test set than it is on the training set, then you are likely **overfitting** your data.
+
+--
+
+We will see an examples next week with classification and regression trees.
 
 ---
 
@@ -646,10 +664,10 @@ high_risk[1:20]
 ```
 
 ```
-##     2     4     9    14    15    16    20    23    34    37    40    48 
-## FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE 
-##    53    63    65    74    87    94   102   105 
-## FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+    2     4     9    14    15    16    20    23    34    37    40    48 
+FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE 
+   53    63    65    74    87    94   102   105 
+FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE 
 ```
 
 ---
@@ -664,10 +682,10 @@ table(actuals_test, high_risk)
 ```
 
 ```
-##             high_risk
-## actuals_test FALSE TRUE
-##        FALSE  1928   14
-##        TRUE     43   15
+            high_risk
+actuals_test FALSE TRUE
+       FALSE  1928   14
+       TRUE     43   15
 ```
 
 
@@ -728,7 +746,7 @@ roc_test$auc
 ```
 
 ```
-## Area under the curve: 0.9314
+Area under the curve: 0.9314
 ```
 
 What AUC would we get with completely random guesses? 
@@ -749,7 +767,7 @@ shuffled_roc$auc
 ```
 
 ```
-## Area under the curve: 0.5528
+Area under the curve: 0.5528
 ```
 
 
@@ -768,10 +786,20 @@ shuffled_roc$auc
 
 ## Recap
 
-* You have learnt about classification problems, which are the basis for many 
+* You have learnt about classification, which is at the basis of many 
   interesting data science problems 
-* You know the basics of logistic regression, the standard tool for classification. 
-  (As you become a data scientist, you'll get to know many more tools, e.g. 
+--
+
+* You know the basics of logistic regression, the standard tool for classification. (As you become a data scientist, you'll get to know many more tools, e.g. classification trees, gradient boosted trees and neural networks.)
+--
+
+* You have seen how to use the package `glm` to fit a model, and how to use the fitted model for predictions on new data. Try to reproduce this yourself. 
+--
+
+* Predictive performance of your fitted model is best measured on test data, i.e. on data that were not used to fit your model.
+--
+
+* You have learned about how to threshold a predicted probability for actual predictions, and the trade-off between false positives and false negatives. 
 
 ---
 
